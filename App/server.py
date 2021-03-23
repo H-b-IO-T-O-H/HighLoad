@@ -1,29 +1,27 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import getopt
+import os
 import socket
 import sys
-import multiprocessing
+import multiprocessing as mp
 import select
-from multiprocessing import Process
+from logger import log
 from utils import HttpResponse
 
-HOST = '127.0.0.1'
+HOST = 'localhost'
 PORT = 8080
 EOL1 = b'\n\n'
 EOL2 = b'\n\r\n'
 TIMEOUT = 1.0
 
 log_flag = False
-cpu_count = multiprocessing.cpu_count()
+cpu_count = mp.cpu_count()
 document_dir = './DOCUMENT_ROOT'
 
 
-def child(server):
+def child(sock):
     while True:
         try:
-            connection_socket, address = server.accept()
+            connection_socket, address = sock.accept()
             data = b''
             ready = select.select([connection_socket], [], [], TIMEOUT)
             if not ready[0]:
@@ -53,7 +51,7 @@ def child(server):
             response = HttpResponse(method_str, path_str, document_dir).to_str()
             bytes_sent_total = 0
             while bytes_sent_total < len(response):
-                data_to_send = response[bytes_sent_total:].encode('utf-8')
+                data_to_send = response[bytes_sent_total:]
                 temp = connection_socket.send(data_to_send)
                 bytes_sent_total += temp
 
@@ -64,7 +62,7 @@ def child(server):
             print("timeout exception")
             continue
         except socket.error:
-            print("error exception")
+            #print("error exception")
             continue
 
 
@@ -75,9 +73,30 @@ def print_help():
     print("-h               show help")
 
 
+class Server:
+    def __init__(self):
+        self.logger = log
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((HOST, PORT))
+        sock.setblocking(False)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        self.socket = sock
+
+    def run(self):
+        self.socket.listen(socket.SOMAXCONN)
+        child(self.socket)
+
+        # workers = [mp.Process(target=child, args=(self.socket,), name="Worker " + str(i + 1)) for i in range(cpu_count)]
+        # for p in workers:
+        #     self.logger.info(f"Started process {p}")
+        #     p.start()
+
+
 if __name__ == '__main__':
+    print(cpu_count)
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "r:c:lh")
+        opts, args = getopt.getopt(sys.argv[1:], 'r:c:lh')
     except getopt.GetoptError:
         print_help()
         sys.exit(1)
@@ -97,24 +116,9 @@ if __name__ == '__main__':
             print_help()
             sys.exit(0)
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # server_socket.settimeout(TIMEOUT)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    try:
-        server_socket.bind((HOST, PORT))
-    except socket.error as e:
-        print(e.args[1])
-        sys.exit(1)
+    server = Server()
+    server.run()
 
-    server_socket.listen(socket.SOMAXCONN)
-    child(server_socket)
-
-    # if log_flag:
-    #     print('Server started on %s:%s' % (HOST, str(PORT)))
-    #     print('Uses %s CPUs' % cpu_count)
-
-    # for i in range(cpu_count):
-    # proc = Process(target=child, args=(server_socket,), name="Worker " + str(1))
-    # proc.start()
-    # if log_flag:
-    #     print("Process %s started, pid %s" % (1, proc.pid))
+    # for process in multiprocessing.active_children():
+    #     process.terminate()
+    #     process.join()

@@ -7,11 +7,14 @@ import os.path
 
 from PIL import Image
 
-STATUS_OK = '200 OK'
-STATUS_FORBIDDEN = '403 Forbidden'
-STATUS_NOT_FOUND = '404 Not Found'
-STATUS_METHOD_NOT_ALLOWED = '405 Method Not Allowed'
-EOL3 = '\r\n'
+# file:////home/vlad/HighLoad/http-test-suite/httptest/wikipedia_russia.html
+# http://localhost/httptest/wikipedia_russia.html
+
+STATUS_OK = b'200 OK'
+STATUS_FORBIDDEN = b'403 Forbidden'
+STATUS_NOT_FOUND = b'404 Not Found'
+STATUS_METHOD_NOT_ALLOWED = b'405 Method Not Allowed'
+EOL3 = b'\r\n'
 
 
 class HttpResponse:
@@ -21,9 +24,9 @@ class HttpResponse:
         self.filename = ''
         self.content = ''
         self.status = STATUS_OK
-        self.date = datetime.now().strftime('Date: %a, %d %b %Y %H:%M:%S GMT +3')
-        self.server = 'Server: python-server (Unix)'
-        self.connection = 'Connection: close'
+        self.date = datetime.now().strftime('Date: %a, %d %b %Y %H:%M:%S GMT +3').encode('utf-8')
+        self.server = b'Server: python-server (Unix)'
+        self.connection = b'Connection: close'
 
         self.create_response(path_str)
 
@@ -44,9 +47,6 @@ class HttpResponse:
             self.status = STATUS_METHOD_NOT_ALLOWED
             return
 
-        if path_str.endswith('wikipedia_russia.html'):
-            print("ko")
-
         if not os.path.isfile(self.filename):
             self.status = STATUS_NOT_FOUND
             self.content = STATUS_NOT_FOUND
@@ -65,55 +65,42 @@ class HttpResponse:
                 return
 
         self.status = STATUS_OK
-
-        if self.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.swf')) or path_str.endswith(
-                'wikipedia_russia.html'):
-            with open(self.filename, "rb") as image:
-                request_file = image.read()
-                self.content = request_file
-        else:
-            request_file = open(self.filename, 'r')
-            try:
-                self.content = request_file.read()
-            except:
-                print("Err")
-
-        # request_file.close()
+        with open(self.filename, 'rb') as f:
+            self.content = f.read()
 
     def to_str(self):
-        response_str = 'HTTP/1.1 '
-        response_str += self.status + EOL3
-        response_str += self.date + EOL3
-        response_str += self.server + EOL3
-        response_str += self.connection + EOL3
+        response_bytes = b'HTTP/1.1 '
+        response_bytes += self.status + EOL3
+        response_bytes += self.date + EOL3
+        response_bytes += self.server + EOL3
+        response_bytes += self.connection + EOL3
+
         if self.status == STATUS_OK or self.status == STATUS_NOT_FOUND or self.status == STATUS_FORBIDDEN:
-            response_str += self.get_content_type() + EOL3
-            response_str += 'Content-Length: ' + str(len(self.content)) + EOL3
-            response_str += EOL3  # Пустая строка
+            response_bytes += self.get_content_type() + EOL3
+            response_bytes += b'Content-Length: ' + bytearray(str(len(self.content)), encoding='utf-8') + EOL3
+            response_bytes += EOL3  # Пустая строка
             if self.method != 'HEAD':
-                if self.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.swf')):
-                    response_str += str(self.content) + EOL3
-                else:
-                    response_str += self.content + EOL3
-        return response_str
+                response_bytes += bytearray(self.content) + b'\r\n'
+
+        return response_bytes
 
     def get_content_type(self):
-        content_type = 'Content-Type: '
+        content_type = b'Content-Type: '
         if self.filename.lower().endswith('.html') or self.status == STATUS_NOT_FOUND:
-            content_type += 'text/html'
+            content_type += b'text/html'
         elif self.filename.lower().endswith('.css'):
-            content_type += 'text/css'
+            content_type += b'text/css'
         elif self.filename.lower().endswith('.js'):
-            content_type += 'application/javascript'
+            content_type += b'application/javascript'
         elif self.filename.lower().endswith('.jpg') or self.filename.lower().endswith('.jpeg'):
-            content_type += 'image/jpeg'
+            content_type += b'image/jpeg'
         elif self.filename.lower().endswith('.png'):
-            content_type += 'image/png'
+            content_type += b'image/png'
         elif self.filename.lower().endswith('.gif'):
-            content_type += 'image/gif'
+            content_type += b'image/gif'
         elif self.filename.lower().endswith('.swf'):
-            content_type += 'application/x-shockwave-flash'
+            content_type += b'application/x-shockwave-flash'
         else:
-            content_type += 'text/plain'
+            content_type += b'text/plain'
 
         return content_type
