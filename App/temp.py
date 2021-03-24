@@ -1,12 +1,9 @@
-import asyncio
 import getopt
-
+import os
 import socket
 import sys
 import multiprocessing as mp
 import select
-
-from worker import *
 from logger import log
 from utils import HttpResponse
 
@@ -19,41 +16,6 @@ TIMEOUT = 1.0
 log_flag = False
 cpu_count = mp.cpu_count()
 document_dir = './DOCUMENT_ROOT'
-
-
-async def handle_client(client):
-    loop = asyncio.get_event_loop()
-    data = b''
-    while EOL1 not in data and EOL2 not in data:
-        data_buffer = (await loop.sock_recv(client, 1024))
-        if not data_buffer:
-            break
-        data += data_buffer
-    data = data.splitlines()
-    if not data:
-        return
-    first_line = data[0].split()
-    if len(first_line) < 2:
-        return
-
-    method_str = first_line[0].decode('utf-8')
-    path_str = first_line[1].decode('utf-8')
-
-    response = HttpResponse(method_str, path_str, document_dir).to_str()
-    await loop.sock_sendall(client, response)
-    client.close()
-
-
-async def sub_main():
-    print('Hello from subprocess')
-
-
-async def sub_loop():
-    await asyncio.get_event_loop().run_until_complete(sub_main())
-
-
-async def start():
-    mp.Process(target=sub_loop).start()
 
 
 def child(sock):
@@ -95,7 +57,7 @@ def child(sock):
             print("timeout exception")
             continue
         except socket.error:
-            # print("error exception")
+            #print("error exception")
             continue
 
 
@@ -107,45 +69,27 @@ def print_help():
 
 
 class Server:
-    def __init__(self, timeout, doc_dir):
+    def __init__(self):
         self.logger = log
-        self.config = {
-            "conn_timeout": timeout,
-            "document_dir": doc_dir
-        }
-        # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # sock.bind((HOST, PORT))
-        # sock.setblocking(False)
-        # sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((HOST, PORT))
-        sock.listen(8)
         sock.setblocking(False)
-
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.socket = sock
 
     def run(self):
-        # self.socket.listen(socket.SOMAXCONN)
+        self.socket.listen(socket.SOMAXCONN)
+        #child(self.socket)
 
-        workers = []
-        for x in range(cpu_count):
-            w = Worker(self.socket, self.config)
-            workers.append(w)
-            w.start()
-
-        try:
-            for w in workers:
-                w.join()
-        except KeyboardInterrupt:
-            for w in workers:
-                w.terminate()
-        finally:
-            self.socket.close()
+        workers = [mp.Process(target=child, args=(self.socket,), name="Worker " + str(i + 1)) for i in range(cpu_count)]
+        for p in workers:
+            self.logger.info(f"Started process {p}")
+            p.start()
 
 
 if __name__ == '__main__':
+    print(cpu_count)
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'r:c:lh')
     except getopt.GetoptError:
@@ -167,6 +111,9 @@ if __name__ == '__main__':
             print_help()
             sys.exit(0)
 
-    print(cpu_count)
-    server = Server(timeout=TIMEOUT, doc_dir=document_dir)
+    server = Server()
     server.run()
+
+    # for process in multiprocessing.active_children():
+    #     process.terminate()
+    #     process.join()
