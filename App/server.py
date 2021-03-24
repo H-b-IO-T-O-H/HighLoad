@@ -44,17 +44,6 @@ async def handle_client(client):
     client.close()
 
 
-async def sub_main():
-    print('Hello from subprocess')
-
-
-async def sub_loop():
-    await asyncio.get_event_loop().run_until_complete(sub_main())
-
-
-async def start():
-    mp.Process(target=sub_loop).start()
-
 
 def child(sock):
     while True:
@@ -110,7 +99,7 @@ class Server:
     def __init__(self, timeout, doc_dir):
         self.logger = log
         self.config = {
-            "conn_timeout": timeout,
+            "conn_timeout": 10,
             "document_dir": doc_dir
         }
         # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -121,7 +110,7 @@ class Server:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((HOST, PORT))
-        sock.listen(8)
+        sock.listen(500)
         sock.setblocking(False)
 
         self.socket = sock
