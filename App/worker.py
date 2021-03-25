@@ -1,10 +1,6 @@
 import multiprocessing
 import asyncio
-
-from App.utils import HttpResponse
-
-EOL1 = b'\n\n'
-EOL2 = b'\n\r\n'
+from response import HttpResponse
 
 
 class Worker(multiprocessing.Process):
@@ -16,29 +12,23 @@ class Worker(multiprocessing.Process):
 
     def run(self):
         self.loop = asyncio.get_event_loop()
-
         try:
             self.loop.run_until_complete(self.work())
-        except KeyboardInterrupt as e:
-            print("Caught keyboard interrupt. Canceling tasks...")
-        finally:
-            print('Successfully shutdown worker.')
+        except KeyboardInterrupt:
+            print('shutdown worker.')
             self.loop.close()
 
     async def work(self):
+        timeout = self.config['conn_timeout']
         while True:
             conn, _ = await self.loop.sock_accept(self.sock)
-            conn.settimeout(self.config['conn_timeout'])
+            conn.settimeout(timeout)
             conn.setblocking(False)
-            self.loop.create_task(self.handle_conn(conn))
+            await self.handle_connection(conn)
+            conn.close()
 
-    async def handle_conn(self, conn):
+    async def handle_connection(self, conn):
         data = await self.loop.sock_recv(conn, 1024)
-        # while EOL1 not in data and EOL2 not in data:
-        #     data_buffer = (await self.loop.sock_recv(conn, 1024))
-        #     if not data_buffer:
-        #         break
-        #     data += data_buffer
         data = data.splitlines()
         if not data:
             return
@@ -49,6 +39,13 @@ class Worker(multiprocessing.Process):
         method_str = first_line[0].decode('utf-8')
         path_str = first_line[1].decode('utf-8')
 
-        response = HttpResponse(method_str, path_str, self.config['document_dir']).to_str()
-        await self.loop.sock_sendall(conn, response)
-        conn.close()
+        resp = HttpResponse(method_str, path_str, self.config['document_dir'])
+        headers = resp.get_headers()
+
+        await self.loop.sock_sendall(conn, headers)
+        if resp.has_file:
+            try:
+                with open(resp.filename, 'rb') as f:
+                    await self.loop.sock_sendall(conn, f.read())
+            except IOError:
+                pass
