@@ -7,8 +7,7 @@ import sys
 def config_reader(filename, log):
     section = 'server_options'
     config_data = {}
-    path = f"{os.getcwd().rsplit('/', 1)[0]}/{filename}" if os.getcwd() != '/my_nginx' else '/etc/httpd.conf'
-
+    path = f"{os.getcwd().rsplit('/', 1)[0]}/{filename}" if os.getcwd() != '/my_nginx' else filename
     if not os.path.isfile(path):
         log.error('wrong path to config file')
         sys.exit(1)
