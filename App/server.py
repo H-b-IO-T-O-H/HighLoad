@@ -10,8 +10,7 @@ class Server:
         self.logger = log
         self.config = config_reader('httpd.conf', self.logger)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        #sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind((self.config['host'], self.config['port']))
         except OSError:

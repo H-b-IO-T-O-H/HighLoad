@@ -27,7 +27,7 @@ def config_reader(filename, log):
     #     sys.exit(1)
     config_data['conn_timeout'] = 10
     config_data['parallel_conn'] = 500
-    config_data['host'] = 'localhost'
+    config_data['host'] = '0.0.0.0'
     if config_data['port'] <= 0:
         config_data['port'] = 80
     if config_data['cpu_count'] <= 0:
