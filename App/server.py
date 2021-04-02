@@ -9,15 +9,15 @@ class Server:
     def __init__(self):
         self.logger = log
         self.config = config_reader('httpd.conf', self.logger)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # ipv4 потоковый сокет, работает по протоколу TCP
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # обновляет сокет, не дожидаясь дефолтного таймаута
         try:
-            sock.bind((self.config['host'], self.config['port']))
+            sock.bind((self.config['host'], self.config['port']))  # привязка сокета к хосту и порту
         except OSError:
             log.error(f'another app running on your address')
             sys.exit(1)
-        sock.listen(self.config['parallel_conn'])
-        sock.setblocking(False)
+        sock.listen(self.config['parallel_conn'])  # кол-во одновременных соединений
+        sock.setblocking(False)  # Resource temporarily unavailable error instead of waiting for data/socket.
 
         self.socket = sock
 

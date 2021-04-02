@@ -11,7 +11,7 @@ class Worker(multiprocessing.Process):
         self.config = config
 
     def run(self):
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
         try:
             self.loop.run_until_complete(self.work())
         except KeyboardInterrupt:
