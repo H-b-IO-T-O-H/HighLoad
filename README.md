@@ -14,7 +14,7 @@ The project was developed as part of the Technopark's high-load systems course.
 ### MVP проекта:
 
 1. Авторизация, регистрация, профиль пользователя;
-2. Лента рекоммендаций;
+2. Просмотр видео;
 3. Поиск.
 
 ### Расчет нагрузки (Россия):
