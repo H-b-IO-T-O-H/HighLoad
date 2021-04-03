@@ -65,5 +65,5 @@ The project was developed as part of the Technopark's high-load systems course.
 
 ### Литература
 
-https://maski-instagrama.ru/tiktok/statistika-akkaunta-v-tik-tok-scetcik-posledovatelej-analitika
-https://news.cpa.ru/tiktok-showed-audience-statistics/
+- https://maski-instagrama.ru/tiktok/statistika-akkaunta-v-tik-tok-scetcik-posledovatelej-analitika
+- https://news.cpa.ru/tiktok-showed-audience-statistics/
