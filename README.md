@@ -2,6 +2,8 @@
 
 The project was developed as part of the Technopark's high-load systems course.
 
+---
+
 ### Тема проекта:
 
 Социальная сеть - TikTok.
@@ -54,6 +56,11 @@ The project was developed as part of the Technopark's high-load systems course.
 - Выгрузки на сервер видео-контента: (81 Mb * 9 * 10 ^ 3) / 6  ~ **0.12 Tb**
 - Поиск в рекоммедациях: (1.2 Mb * 9 * 10 ^ 6) / 60 ~ **0.18 Tb**
 - Другие операции: (0.3 Mb * 9 * 10 ^ 6) / 60 ~ **0.04 Tb**
+
+
+### Логическая схема БД:
+
+---
 
 
 ### Литература
