@@ -61,7 +61,7 @@ The project was developed as part of the Technopark's high-load systems course.
 ### Логическая схема БД:
 
 ---
-
+![Иллюстрация к проекту](https://raw.githubusercontent.com/H-b-IO-T-O-H/HighLoad/main/subd_sheme/subd_logic.png)
 
 ### Литература
 
