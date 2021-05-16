@@ -77,9 +77,11 @@ The project was developed as part of the Technopark's high-load systems course.
       user_id(16) + name(20) + username(24) + email(128) + phone(11) + password(128) + total_likes_cnt(8) + followers_cnt(8) + following_cnt(8) = 351 bytes
       Количество пользователей в России: 18 * 10^6, потребуется 18 * 10^6 * 351 ~ 5.9 Gb
     video_preview_gifs:
+    followers:
+    hashtags:
     
   
-|Сущность|Объем память на год работы, Гб|
+|Сущность|Объем памяти на год работы, Гб|
 | -------------  | :-------------:  |
 |Users|5.9|
 |Recommendations||
