@@ -33,8 +33,11 @@ The project was developed as part of the Technopark's high-load systems course.
 - Максимальный размер видео: 75Mb (android), 250Mb (ios);
 - Число ежедневных просмотров видео: 666 млн;
 - Число ежедневных загрузок видео: 666 тыс;
+- Среднее число хэштегов в видео: 4;
 
-Источник: https://news.cpa.ru/tiktok-showed-audience-statistics/
+Источник:
+  - https://news.cpa.ru/tiktok-showed-audience-statistics/
+  - https://rusability.ru/articles/Heshtegi-dlya-Tik-Tok-kak-podobrat,-ispolzovat-i-prodvigatsya-bistree-konkurentov/5fd296ad2dda593c3483efc4
 
 #### Расчеты:
 
@@ -72,21 +75,36 @@ The project was developed as part of the Technopark's high-load systems course.
 
     videos:
       video_id(16) + title(150) + author_name(24) + autor_id(16) + duration(4) + likes_cnt(8) + audio_file_title(50) + path_to_video_file(128) + file_prefix(16) = 412 bytes
-      Количество загружаемых видео: 20 * 10^6 / month, на первый год потребуется 12 * 20 * 10^6 * 412 ~ 92.1 Gb для хранения в бд и --- в файловом хранилище
+      
+    Количество загружаемых видео: 20 * 10^6 / month, на первый год потребуется 12 * 20 * 10^6 * 412 ~ 92.1 Gb для хранения в бд и --- в файловом хранилище
     users:
       user_id(16) + name(20) + username(24) + email(128) + phone(11) + password(128) + total_likes_cnt(8) + followers_cnt(8) + following_cnt(8) = 351 bytes
       Количество пользователей в России: 18 * 10^6, потребуется 18 * 10^6 * 351 ~ 5.9 Gb
+    
     video_preview_gifs:
+    
     followers:
+      follower_id(16) + user_id(16) + follower_name(24) = 56 bytes
+      Будем считать только Российский сегмент без подписок на иностранных авторов: 
+      Количество пользователей в России: 18 * 10^6, потребуется 18 * 10^6 * 56 ~ 0,94 Gb
+    
     hashtags:
+      hashtag_id(16) + hashtag(100) + followers_cnt(8) + is_trend(1) ~ 125 bytes
+      В среднем для видео генерируется 4 хэштега. Для Российского сегмента потребуется:
+      12 * 20 * 4 * 10^6 * 125 ~ 111 Gb
+
+    recommendations:
+      Предположим, рекомендации пользователя определяются на основании 10 последних просмотренных видео и 5 наиболее популярных хэштегов.
+      recommendation_id(16) + user_id(16) + favourites_videos_id(16 * 10) +  favourites_hashtags_id(16 * 5) + average_video_duration(4) = 356 bytes
+      18 * 10^6 * 356 ~ 5.97 Gb
+      
     
   
 |Сущность|Объем памяти на год работы, Гб|
 | -------------  | :-------------:  |
 |Users|5.9|
-|Recommendations||
+|Recommendations|5.97|
 |Videos|92.1|
-|Gifs (video preview)||
-|Hashtags||
-|Followers||
-|Followers_hashtag||
+|Gifs (video preview)| - |
+|Hashtags|111|
+|Followers|0.94|
